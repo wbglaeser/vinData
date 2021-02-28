@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.framework.ops import EagerTensor
 import matplotlib.pyplot as plt
 import matplotlib.patches as pac
 
@@ -26,6 +27,14 @@ class FeedImage(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+class ProcessedContainer(BaseModel):
+    image_px: EagerTensor
+    labels: EagerTensor
+    bboxes: EagerTensor
+
+    class Config:
+        arbitrary_types_allowed = True
+
 class PreprocessImageData():
 
     @classmethod
@@ -35,7 +44,9 @@ class PreprocessImageData():
         ppi = cls()
 
         # run through all images
-        ppi.preprocess_all_images(raw_images, df)
+        container = ppi.preprocess_all_images(raw_images, df)
+
+        return container
 
     def add_boxes_to_image(self, image: RawImage, df: pd.DataFrame) -> FeedImage:
 
@@ -64,13 +75,18 @@ class PreprocessImageData():
 
         return new_feed_image
 
-    def preprocess_all_images(self, images: List[RawImage], df: pd.DataFrame):
+    def preprocess_all_images(self, images: List[RawImage], df: pd.DataFrame) -> List:
+
+        container = []
 
         for image in images:
 
             # preprocess this shit
             image_with_boxes = self.add_boxes_to_image(image, df)
-            image, bboxes = self.preprocess_image(image_with_boxes)
+            processed_container = self.preprocess_image(image_with_boxes)
+            container.append(processed_container)
+
+        return container
 
     def preprocess_image(self, image: FeedImage):
 
@@ -79,29 +95,31 @@ class PreprocessImageData():
         bboxes = image.objects.bboxes
         class_id = tf.cast(image.objects.labels, dtype=tf.int32)
 
-        self.plot_image_with_box(image_px, bboxes)
+        #self.plot_image_with_box(image_px, bboxes)
 
         # normalise pixel value
         image_px = image_px / image.bits_stored
 
-        print("beforeshape: ", image_px.shape)
-        print("beforeboxes: ", bboxes)
-
         # random flip horizontal
         image_px, bboxes = self.random_flip_horizontal(image_px, bboxes)
-
-        print("intermediateshape: ", image_px.shape)
-        print("intermediateboxes: ", bboxes)
 
         # reshape
         image_px, bboxes = self.resize_and_pad_image(image_px, bboxes)
 
-        print("aftershape: ", image_px.shape)
-        print("afterboxes: ", bboxes)
+        #self.plot_image_with_box(image_px, bboxes)
 
-        self.plot_image_with_box(image_px, bboxes)
+        # convert boxes to xywh format
+        bboxes = self.convert_to_xywh(bboxes)
 
-        return image_px, bboxes
+        # wrap in image type
+        return_image = {
+            "image_px": image_px,
+            "labels": class_id,
+            "bboxes": bboxes
+        }
+        processed_container = ProcessedContainer(**return_image)
+
+        return processed_container
 
     def random_flip_horizontal(self, image, boxes):
 
@@ -161,46 +179,19 @@ class PreprocessImageData():
 
         plt.show()
 
-def swap_xy(boxes):
-    """Swaps order the of x and y coordinates of the boxes.
+    def convert_to_xywh(self, boxes):
+        """Changes the box format to center, width and height."""
 
-    Arguments:
-      boxes: A tensor with shape `(num_boxes, 4)` representing bounding boxes.
+        x = (boxes[...,0] + boxes[..., 2]) / 2
+        y = (boxes[...,1] + boxes[..., 3]) / 2
+        w = boxes[...,3] - boxes[..., 1]
+        h = boxes[...,3] - boxes[..., 1]
 
-    Returns:
-      swapped boxes with shape same as that of boxes.
-    """
-    return tf.stack([boxes[:, 1], boxes[:, 0], boxes[:, 3], boxes[:, 2]], axis=-1)
+        return tf.stack([x, y, w, h], axis=-1)
 
-
-def convert_to_xywh(boxes):
-    """Changes the box format to center, width and height.
-
-    Arguments:
-      boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
-        representing bounding boxes where each box is of the format
-        `[xmin, ymin, xmax, ymax]`.
-
-    Returns:
-      converted boxes with shape same as that of boxes.
-    """
-    return tf.concat(
-        [(boxes[..., :2] + boxes[..., 2:]) / 2.0, boxes[..., 2:] - boxes[..., :2]],
-        axis=-1,
-    )
-
-def convert_to_corners(boxes):
-    """Changes the box format to corner coordinates
-
-    Arguments:
-      boxes: A tensor of rank 2 or higher with a shape of `(..., num_boxes, 4)`
-        representing bounding boxes where each box is of the format
-        `[x, y, width, height]`.
-
-    Returns:
-      converted boxes with shape same as that of boxes.
-    """
-    return tf.concat(
-        [boxes[..., :2] - boxes[..., 2:] / 2.0, boxes[..., :2] + boxes[..., 2:] / 2.0],
-        axis=-1,
-    )
+    def convert_to_corners(self, boxes):
+        """Changes the box format to corner coordinates"""
+        return tf.concat(
+            [boxes[..., :2] - boxes[..., 2:] / 2.0, boxes[..., :2] + boxes[..., 2:] / 2.0],
+            axis=-1,
+        )
