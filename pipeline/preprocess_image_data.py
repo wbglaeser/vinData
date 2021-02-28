@@ -58,9 +58,8 @@ class PreprocessImageData():
 
         # extract class labels
         labels = df[df["image_id"] == uid]["class_id"].values
-
         # extract bounding boxes
-        bboxes = df[df["image_id"] == uid][["x_min", "y_min", "x_max", "y_max"]].values[:2].astype(np.float32)
+        bboxes = df[df["image_id"] == uid][["x_min", "y_min", "x_max", "y_max"]].values.astype(np.float32)
 
         # parse to new image object
         feed_image = {
@@ -189,7 +188,8 @@ class PreprocessImageData():
 
         return tf.stack([x, y, w, h], axis=-1)
 
-    def convert_to_corners(self, boxes):
+    @staticmethod
+    def convert_to_corners(boxes):
         """Changes the box format to corner coordinates"""
         return tf.concat(
             [boxes[..., :2] - boxes[..., 2:] / 2.0, boxes[..., :2] + boxes[..., 2:] / 2.0],
