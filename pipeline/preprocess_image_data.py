@@ -21,7 +21,6 @@ class ObjectSpecs(BaseModel):
 
 class FeedImage(BaseModel):
     pixel_array: np.ndarray
-    bits_stored: int
     objects: ObjectSpecs
 
     class Config:
@@ -67,8 +66,7 @@ class PreprocessImageData():
             "objects": {
                 "labels": labels,
                 "bboxes": bboxes
-            },
-            "bits_stored": image.bits_stored
+            }
         }
         new_feed_image = FeedImage(**feed_image)
 
@@ -78,8 +76,9 @@ class PreprocessImageData():
 
         container = []
 
+        print(len(images))
         for image in images:
-
+        
             # preprocess this shit
             image_with_boxes = self.add_boxes_to_image(image, df)
 
