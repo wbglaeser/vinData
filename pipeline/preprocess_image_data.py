@@ -82,6 +82,12 @@ class PreprocessImageData():
 
             # preprocess this shit
             image_with_boxes = self.add_boxes_to_image(image, df)
+
+            # skip if no finding
+            if 14 in image_with_boxes.objects.labels:
+                continue
+
+            # else continue processing
             processed_container = self.preprocess_image(image_with_boxes)
             container.append(processed_container)
 
@@ -191,7 +197,14 @@ class PreprocessImageData():
     @staticmethod
     def convert_to_corners(boxes):
         """Changes the box format to corner coordinates"""
-        return tf.concat(
+        t = tf.concat(
             [boxes[..., :2] - boxes[..., 2:] / 2.0, boxes[..., :2] + boxes[..., 2:] / 2.0],
             axis=-1,
         )
+        return t
+
+    @staticmethod
+    def convert_to_rgb(image, boxes, class_ids):
+        "convert our grayscale images to rgb values"
+        image_rgb = tf.image.grayscale_to_rgb(image)
+        return image_rgb, boxes, class_ids
