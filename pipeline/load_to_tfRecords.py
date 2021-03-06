@@ -15,7 +15,7 @@ class LoadToTFRecords():
 
     FILENAME = "training.tfrecords"
     RAW_TRAIN_DIR = "train"
-    RAW_TRAIN_DIR_FULL = os.path.join(DATA_DIR_GCP, RAW_TRAIN_DIR)
+    RAW_TRAIN_DIR_FULL = os.path.join(DATA_DIR, RAW_TRAIN_DIR)
 
     @classmethod
     def run(cls, container: List[ProcessedContainer]):

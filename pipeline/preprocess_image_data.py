@@ -102,7 +102,7 @@ class PreprocessImageData():
         #self.plot_image_with_box(image_px, bboxes)
 
         # normalise pixel value
-        image_px = image_px / image.bits_stored
+        #image_px = image_px / image.bits_stored
 
         # random flip horizontal
         image_px, bboxes = self.random_flip_horizontal(image_px, bboxes)
