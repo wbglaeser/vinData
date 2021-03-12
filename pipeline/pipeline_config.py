@@ -6,3 +6,4 @@ class Environment(Enum):
 
 path_to_images = "data/train"
 path_to_bounding_boxes = "data/train.csv"
+path_to_tfRecords = "data/train.tfRecords"

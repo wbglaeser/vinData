@@ -48,7 +48,7 @@ def match_bounding_boxes(image: RawImage, df: pd.DataFrame):
 
 def preprocess_image(image_px: np.ndarray, boxes: np.ndarray, labels: List):
 
-    plot_image_with_box(image_px, boxes)
+    #plot_image_with_box(image_px, boxes)
 
     # random flip horizontal
     image_px, boxes = random_flip_horizontal(image_px, boxes)
@@ -56,7 +56,7 @@ def preprocess_image(image_px: np.ndarray, boxes: np.ndarray, labels: List):
     # reshape
     image_px, boxes = resize_and_pad_image(image_px, boxes)
 
-    plot_image_with_box(image_px, boxes)
+    #plot_image_with_box(image_px, boxes)
 
     # convert boxes to xywh format
     boxes = convert_to_xywh(boxes)
@@ -65,7 +65,7 @@ def preprocess_image(image_px: np.ndarray, boxes: np.ndarray, labels: List):
     image = {
         "image_px": image_px,
         "labels": labels,
-        "bboxes": boxes
+        "boxes": boxes
     }
 
     return image
@@ -106,8 +106,6 @@ def resize_and_pad_image(
     image_shape = ratio * image_shape
     image_px = tf.image.resize(image_px, tf.cast(image_shape, dtype=tf.int32))
 
-    print(ratio)
-    print(boxes)
     # apply reshape to boxes
     boxes = tf.stack(
         [
