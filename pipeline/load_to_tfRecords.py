@@ -2,14 +2,13 @@
 import os
 from typing import List
 from pydantic import BaseModel
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
 import tensorflow as tf
 
-from pipeline.preprocess_image_data import ProcessedContainer
 from settings import *
-
 
 class LoadToTFRecords():
 
@@ -17,7 +16,7 @@ class LoadToTFRecords():
     RAW_TRAIN_DIR = "train"
     RAW_TRAIN_DIR_FULL = os.path.join(DATA_DIR, RAW_TRAIN_DIR)
 
-    def run(self, container: List[ProcessedContainer]):
+    def run(self, container: List[dict]):
 
         self.load_to_tfRecords(container)
 
@@ -31,7 +30,7 @@ class LoadToTFRecords():
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
     # images and labels array as input
-    def load_to_tfRecords(self, images: List[ProcessedContainer]):
+    def load_to_tfRecords(self, images: List[dict], path: Path):
 
         filename = os.path.join(self.RAW_TRAIN_DIR_FULL, self.FILENAME)
 

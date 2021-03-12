@@ -1,32 +1,29 @@
 from typing import List
-
+from enum import Enum
 from prefect import task, Flow, Parameter
 import pandas as pd
 
-from pipeline.extract_dicom_files import ExtractDicomImages, RawImage
-from pipeline.extract_classification_boxes import ExtractClassificationBoxes
-from pipeline.preprocess_image_data import PreprocessImageData
+from pipeline.extract_dicom_files import load_images, RawImage
+from pipeline.extract_classification_boxes import load_bounding_boxes
+from pipeline.image_processing import preprocess_images
 from pipeline.load_to_tfRecords import LoadToTFRecords
 
+from pipeline.pipeline_config import *
 
 @task
-def extract_image_data(environment):
-
-    extract_images = ExtractDicomImages(environment)
-    images = extract_images.run()
+def extract_image_data():
+    images = load_images(path_to_images, Environment.local)
     return images
 
 @task
-def extract_classifcation_data(environment):
-    extract_boxes = ExtractClassificationBoxes(environment)
-    df = extract_boxes.run()
+def extract_classifcation_data():
+    df = load_bounding_boxes(path_to_bounding_boxes)
     return df
 
 @task
 def preprocess_image_data(images: List[RawImage], df: pd.DataFrame):
-    preprocesser = PreprocessImageData()
-    preprocess_images = preprocesser.run(images, df)
-    return preprocess_images
+    preprocessed_images = preprocess_images(images, df)
+    return preprocessed_images
 
 @task
 def load_to_tfRecords(processed_images):
@@ -36,14 +33,14 @@ def load_to_tfRecords(processed_images):
 # setup flow
 with Flow("Dicom-ETL") as flow:
     environment = Parameter("environment", default= "local")
-    raw_image_data = extract_image_data(environment)
-    df = extract_classifcation_data(environment)
+    raw_image_data = extract_image_data()
+    df = extract_classifcation_data()
     processed_images = preprocess_image_data(raw_image_data, df)
-    load_to_tfRecords(processed_images)
+    #load_to_tfRecords(processed_images)
 
 parameters = {
     "environment":"local"
 }
 
-flow.run(parameters=parameters)
+flow.run()
 #flow.register(project_name="vinData Challenge")
