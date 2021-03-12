@@ -35,6 +35,8 @@ with Flow("Dicom-ETL") as flow:
     processed_images = preprocess_image_data(raw_image_data, df)
     load_to_tfRecords(processed_images)
 
-parameters = {"environment":"local"}
+parameters = {
+    "environment":"local"
+}
 flow.run(parameters=parameters)
 #flow.register(project_name="vinData Challenge")
