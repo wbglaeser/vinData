@@ -17,11 +17,9 @@ class LoadToTFRecords():
     RAW_TRAIN_DIR = "train"
     RAW_TRAIN_DIR_FULL = os.path.join(DATA_DIR, RAW_TRAIN_DIR)
 
-    @classmethod
-    def run(cls, container: List[ProcessedContainer]):
+    def run(self, container: List[ProcessedContainer]):
 
-        lttfr = cls()
-        lttfr.load_to_tfRecords(container)
+        self.load_to_tfRecords(container)
 
     def _int64_list_feature(self, value):
         return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
@@ -39,7 +37,6 @@ class LoadToTFRecords():
 
         with tf.io.TFRecordWriter(filename) as file_writer:
             for image in images:
-                print("hey there")
                 labels_raw = image.labels.numpy().tostring()
                 image_raw = image.image_px.numpy().tostring()
                 bboxes_raw = image.bboxes.numpy().tostring()

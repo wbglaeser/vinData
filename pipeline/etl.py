@@ -8,24 +8,30 @@ from pipeline.extract_classification_boxes import ExtractClassificationBoxes
 from pipeline.preprocess_image_data import PreprocessImageData
 from pipeline.load_to_tfRecords import LoadToTFRecords
 
+
 @task
 def extract_image_data(environment):
-    images = ExtractDicomImages.run(environment)
+
+    extract_images = ExtractDicomImages(environment)
+    images = extract_images.run()
     return images
 
 @task
 def extract_classifcation_data(environment):
-    df = ExtractClassificationBoxes.run(environment)
+    extract_boxes = ExtractClassificationBoxes(environment)
+    df = extract_boxes.run()
     return df
 
 @task
 def preprocess_image_data(images: List[RawImage], df: pd.DataFrame):
-    preprocess_images = PreprocessImageData.run(images, df)
+    preprocesser = PreprocessImageData()
+    preprocess_images = preprocesser.run(images, df)
     return preprocess_images
 
 @task
 def load_to_tfRecords(processed_images):
-    LoadToTFRecords.run(processed_images)
+    loader = LoadToTFRecords()
+    loader.run(processed_images)
 
 # setup flow
 with Flow("Dicom-ETL") as flow:

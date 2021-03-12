@@ -18,7 +18,7 @@ class RawImage(BaseModel):
         arbitrary_types_allowed = True
 
 class ExtractDicomImages():
-    
+
     RAW_TRAIN_DIR = "train"
     RAW_TRAIN_DIR_FULL = os.path.join(DATA_DIR, RAW_TRAIN_DIR)
     RAW_TRAIN_DIR_FULL_GCP = os.path.join(DATA_DIR_GCP, RAW_TRAIN_DIR)
@@ -35,7 +35,7 @@ class ExtractDicomImages():
         elif self.environment == "gcp":
             image_bytes = tf.io.read_file(path)
             image = tfio.image.decode_dicom_image(image_bytes, dtype=tf.uint16, on_error="skip").numpy()
-        
+
         # parse into RawImageModel
         new_image = {
             "id": path.split("/")[-1].replace(".dicom", ""),
@@ -55,24 +55,20 @@ class ExtractDicomImages():
                     fpath = os.path.join(self.RAW_TRAIN_DIR_FULL, fname)
                     new_image = self.load_image(fpath)
                     container.append(new_image)
-        
+
         elif self.environment == "gcp":
             for fname in tf.io.gfile.listdir(self.RAW_TRAIN_DIR_FULL_GCP):
                 if ".dicom" in fname:
                     fpath = os.path.join(self.RAW_TRAIN_DIR_FULL_GCP, fname)
                     new_image = self.load_image(fpath)
                     container.append(new_image)
-        
+
         return container
 
-    @classmethod
-    def run(cls, environment:str) -> List[RawImage]:
-
-        # instantiate class
-        edi = cls(environment)
+    def run(self) -> List[RawImage]:
 
         # loop through images
-        images = edi.load_all_images()
+        images = self.load_all_images()
 
         return images
 

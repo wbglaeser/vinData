@@ -36,14 +36,10 @@ class ProcessedContainer(BaseModel):
 
 class PreprocessImageData():
 
-    @classmethod
-    def run(cls, raw_images: List[RawImage], df: pd.DataFrame):
-
-        # instantiate class
-        ppi = cls()
+    def run(self, raw_images: List[RawImage], df: pd.DataFrame):
 
         # run through all images
-        container = ppi.preprocess_all_images(raw_images, df)
+        container = self.preprocess_all_images(raw_images, df)
 
         return container
 
@@ -78,7 +74,7 @@ class PreprocessImageData():
 
         print(len(images))
         for image in images:
-        
+
             # preprocess this shit
             image_with_boxes = self.add_boxes_to_image(image, df)
 
