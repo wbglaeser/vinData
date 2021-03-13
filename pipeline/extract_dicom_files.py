@@ -21,6 +21,11 @@ class RawImage(BaseModel):
         arbitrary_types_allowed = True
 
 def load_raw_image(path: Path, environment: Environment) -> RawImage:
+    """ 
+    Load raw image an pass into raw image type 
+    
+    TODO: How to standardize this thing without max bits value
+    """
 
     if environment == Environment.local:
         ds = dcmread(path)
@@ -40,6 +45,7 @@ def load_raw_image(path: Path, environment: Environment) -> RawImage:
     return new_image_typed
 
 def load_images(path: Path, environment: Environment) -> List[RawImage]:
+    """ Load all images in directory for which path is given """
 
     container = []
     for fname in os.listdir(path):
